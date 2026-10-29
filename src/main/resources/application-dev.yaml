@@ -7,7 +7,7 @@ spring:
     username: autoAndeBackEnd
     password: 123456
   jpa:
-    database-platform: org.hibernate.dialect.OracleDialect
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: true

@@ -11,6 +11,7 @@ import pe.edu.upeu.AutoAndes.repository.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,12 +42,12 @@ public class DataInitializer implements CommandLineRunner {
                 .orElseGet(() -> rolRepository.save(new Rol(null, "JEFE_TALLER")));
 
         // 2. Usuarios de prueba (según Anexo 10 - Sección Usuarios de Prueba: Auto2026*)
-        crearOActualizarUsuario("admin", "Auto2026*", "Administrador Principal", 1, Set.of(rolAdmin));
-        crearOActualizarUsuario("asesor", "Auto2026*", "Juan Pérez - Asesor", 1, Set.of(rolAsesor));
-        crearOActualizarUsuario("asesor1", "Auto2026*", "Juan Pérez - Asesor", 1, Set.of(rolAsesor));
-        crearOActualizarUsuario("jefe", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, Set.of(rolJefe));
-        crearOActualizarUsuario("jefe1", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, Set.of(rolJefe));
-        crearOActualizarUsuario("inactivo", "Auto2026*", "Usuario Deshabilitado", 0, Set.of(rolAsesor));
+        crearOActualizarUsuario("admin", "Auto2026*", "Administrador Principal", 1, rolAdmin);
+        crearOActualizarUsuario("asesor", "Auto2026*", "Juan Pérez - Asesor", 1, rolAsesor);
+        crearOActualizarUsuario("asesor1", "Auto2026*", "Juan Pérez - Asesor", 1, rolAsesor);
+        crearOActualizarUsuario("jefe", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, rolJefe);
+        crearOActualizarUsuario("jefe1", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, rolJefe);
+        crearOActualizarUsuario("inactivo", "Auto2026*", "Usuario Deshabilitado", 0, rolAsesor);
 
         // 3. Clientes (6 clientes)
         if (clienteRepository.count() == 0) {
@@ -164,13 +165,18 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Inicialización de datos completada exitosamente.");
     }
 
-    private void crearOActualizarUsuario(String username, String rawPassword, String nombreCompleto, Integer activo, Set<Rol> roles) {
+    private void crearOActualizarUsuario(String username, String rawPassword, String nombreCompleto, Integer activo, Rol rol) {
         usuarioRepository.findByUsernameIgnoreCase(username).ifPresentOrElse(
                 u -> {
                     u.setPassword(passwordEncoder.encode(rawPassword));
                     u.setNombrecompleto(nombreCompleto);
                     u.setActivo(activo);
-                    u.setRoles(roles);
+                    if (u.getRoles() == null) {
+                        u.setRoles(new HashSet<>());
+                    } else {
+                        u.getRoles().clear();
+                    }
+                    u.getRoles().add(rol);
                     usuarioRepository.save(u);
                 },
                 () -> {
@@ -179,6 +185,8 @@ public class DataInitializer implements CommandLineRunner {
                     u.setPassword(passwordEncoder.encode(rawPassword));
                     u.setNombrecompleto(nombreCompleto);
                     u.setActivo(activo);
+                    Set<Rol> roles = new HashSet<>();
+                    roles.add(rol);
                     u.setRoles(roles);
                     usuarioRepository.save(u);
                 }
