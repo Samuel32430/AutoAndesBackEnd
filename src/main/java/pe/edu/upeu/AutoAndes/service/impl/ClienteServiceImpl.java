@@ -1,0 +1,36 @@
+package pe.edu.upeu.AutoAndes.service.impl;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import pe.edu.upeu.AutoAndes.dto.cliente.ClienteResponseDTO;
+import pe.edu.upeu.AutoAndes.entity.Cliente;
+import pe.edu.upeu.AutoAndes.exception.RecursoNoEncontradoException;
+import pe.edu.upeu.AutoAndes.mapper.ClienteMapper;
+import pe.edu.upeu.AutoAndes.repository.ClienteRepository;
+import pe.edu.upeu.AutoAndes.service.ClienteService;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ClienteServiceImpl implements ClienteService {
+
+    private final ClienteRepository clienteRepository;
+    private final ClienteMapper clienteMapper;
+
+    @Override
+    public List<ClienteResponseDTO> listarTodos() {
+        return clienteRepository.findAll().stream()
+                .map(clienteMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public ClienteResponseDTO obtenerPorId(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente no encontrado con ID: " + id));
+        return clienteMapper.toDTO(cliente);
+    }
+}
