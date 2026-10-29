@@ -40,13 +40,15 @@ public class DataInitializer implements CommandLineRunner {
         Rol rolJefe = rolRepository.findByNombreIgnoreCase("JEFE_TALLER")
                 .orElseGet(() -> rolRepository.save(new Rol(null, "JEFE_TALLER")));
 
-        // 2. Usuarios
-        crearUsuarioSiNoExiste("admin", "admin123", "Administrador Principal", 1, Set.of(rolAdmin));
-        crearUsuarioSiNoExiste("asesor1", "asesor123", "Juan Pérez - Asesor", 1, Set.of(rolAsesor));
-        crearUsuarioSiNoExiste("jefe1", "jefe123", "Carlos Rodríguez - Jefe de Taller", 1, Set.of(rolJefe));
-        crearUsuarioSiNoExiste("inactivo", "inactivo123", "Usuario Deshabilitado", 0, Set.of(rolAsesor));
+        // 2. Usuarios de prueba (según Anexo 10 - Sección Usuarios de Prueba: Auto2026*)
+        crearOActualizarUsuario("admin", "Auto2026*", "Administrador Principal", 1, Set.of(rolAdmin));
+        crearOActualizarUsuario("asesor", "Auto2026*", "Juan Pérez - Asesor", 1, Set.of(rolAsesor));
+        crearOActualizarUsuario("asesor1", "Auto2026*", "Juan Pérez - Asesor", 1, Set.of(rolAsesor));
+        crearOActualizarUsuario("jefe", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, Set.of(rolJefe));
+        crearOActualizarUsuario("jefe1", "Auto2026*", "Carlos Rodríguez - Jefe de Taller", 1, Set.of(rolJefe));
+        crearOActualizarUsuario("inactivo", "Auto2026*", "Usuario Deshabilitado", 0, Set.of(rolAsesor));
 
-        // 3. Clientes
+        // 3. Clientes (6 clientes)
         if (clienteRepository.count() == 0) {
             log.info("Cargando clientes semilla...");
             clienteRepository.saveAll(List.of(
@@ -59,7 +61,7 @@ public class DataInitializer implements CommandLineRunner {
             ));
         }
 
-        // 4. Servicios
+        // 4. Servicios (8 servicios, SRV-008 inactivo)
         if (servicioRepository.count() == 0) {
             log.info("Cargando servicios semilla...");
             servicioRepository.saveAll(List.of(
@@ -74,13 +76,13 @@ public class DataInitializer implements CommandLineRunner {
             ));
         }
 
-        // 5. Vehículos
+        // 5. Vehículos (8 vehículos, AAA-111 incluido según sección 10)
         if (vehiculoRepository.count() == 0) {
             log.info("Cargando vehículos semilla...");
             List<Cliente> clientes = clienteRepository.findAll();
             if (clientes.size() >= 6) {
                 vehiculoRepository.saveAll(List.of(
-                        new Vehiculo(null, "ABC-123", "Toyota", "Corolla", 2020, clientes.get(0)),
+                        new Vehiculo(null, "AAA-111", "Toyota", "Corolla", 2020, clientes.get(0)),
                         new Vehiculo(null, "XYZ-789", "Hyundai", "Tucson", 2021, clientes.get(0)),
                         new Vehiculo(null, "MNO-456", "Kia", "Sportage", 2019, clientes.get(1)),
                         new Vehiculo(null, "BCA-321", "Nissan", "Frontier", 2018, clientes.get(2)),
@@ -92,13 +94,13 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 6. Órdenes Semilla iniciales
+        // 6. Órdenes Semilla iniciales (3 REGISTRADAS, una de AAA-111 con km 45000, 1 ANULADA)
         if (ordenServicioRepository.count() == 0) {
             log.info("Cargando órdenes semilla...");
             List<Vehiculo> vehiculos = vehiculoRepository.findAll();
             List<Servicio> servicios = servicioRepository.findAll();
             if (vehiculos.size() >= 4 && servicios.size() >= 7) {
-                // OS-000001
+                // OS-000001 (AAA-111 con km 45000)
                 OrdenServicio os1 = new OrdenServicio();
                 os1.setNumero("OS-000001");
                 os1.setFecha(LocalDateTime.now().minusDays(5));
@@ -106,7 +108,7 @@ public class DataInitializer implements CommandLineRunner {
                 os1.setKilometraje(45000);
                 os1.setEstado("REGISTRADA");
                 os1.setTotal(new BigDecimal("270.00"));
-                os1.setUsuarioRegistro("asesor1");
+                os1.setUsuarioRegistro("asesor");
                 DetalleOrden d1 = new DetalleOrden(null, os1, servicios.get(0), 1, new BigDecimal("180.00"), new BigDecimal("180.00"));
                 DetalleOrden d2 = new DetalleOrden(null, os1, servicios.get(1), 1, new BigDecimal("90.00"), new BigDecimal("90.00"));
                 os1.getDetalles().add(d1);
@@ -121,7 +123,7 @@ public class DataInitializer implements CommandLineRunner {
                 os2.setKilometraje(58000);
                 os2.setEstado("REGISTRADA");
                 os2.setTotal(new BigDecimal("570.00"));
-                os2.setUsuarioRegistro("asesor1");
+                os2.setUsuarioRegistro("asesor");
                 DetalleOrden d3 = new DetalleOrden(null, os2, servicios.get(2), 1, new BigDecimal("250.00"), new BigDecimal("250.00"));
                 DetalleOrden d4 = new DetalleOrden(null, os2, servicios.get(3), 1, new BigDecimal("320.00"), new BigDecimal("320.00"));
                 os2.getDetalles().add(d3);
@@ -151,7 +153,7 @@ public class DataInitializer implements CommandLineRunner {
                 os4.setKilometraje(92000);
                 os4.setEstado("ANULADA");
                 os4.setTotal(new BigDecimal("200.00"));
-                os4.setUsuarioRegistro("asesor1");
+                os4.setUsuarioRegistro("asesor");
                 os4.setMotivoAnulacion("Cliente desistió por falta de tiempo para esperar el pulido");
                 DetalleOrden d7 = new DetalleOrden(null, os4, servicios.get(6), 1, new BigDecimal("200.00"), new BigDecimal("200.00"));
                 os4.getDetalles().add(d7);
@@ -162,16 +164,14 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Inicialización de datos completada exitosamente.");
     }
 
-    private void crearUsuarioSiNoExiste(String username, String rawPassword, String nombreCompleto, Integer activo, Set<Rol> roles) {
+    private void crearOActualizarUsuario(String username, String rawPassword, String nombreCompleto, Integer activo, Set<Rol> roles) {
         usuarioRepository.findByUsernameIgnoreCase(username).ifPresentOrElse(
                 u -> {
-                    if (!u.getPassword().startsWith("$2a$") && !u.getPassword().startsWith("$2b$")) {
-                        u.setPassword(passwordEncoder.encode(rawPassword));
-                        u.setNombrecompleto(nombreCompleto);
-                        u.setActivo(activo);
-                        u.setRoles(roles);
-                        usuarioRepository.save(u);
-                    }
+                    u.setPassword(passwordEncoder.encode(rawPassword));
+                    u.setNombrecompleto(nombreCompleto);
+                    u.setActivo(activo);
+                    u.setRoles(roles);
+                    usuarioRepository.save(u);
                 },
                 () -> {
                     Usuario u = new Usuario();

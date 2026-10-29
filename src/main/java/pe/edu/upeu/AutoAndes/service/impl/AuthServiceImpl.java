@@ -13,6 +13,7 @@ import pe.edu.upeu.AutoAndes.dto.auth.UsuarioResponseDTO;
 import pe.edu.upeu.AutoAndes.entity.Rol;
 import pe.edu.upeu.AutoAndes.entity.Usuario;
 import pe.edu.upeu.AutoAndes.exception.RecursoNoEncontradoException;
+import pe.edu.upeu.AutoAndes.mapper.UsuarioMapper;
 import pe.edu.upeu.AutoAndes.repository.UsuarioRepository;
 import pe.edu.upeu.AutoAndes.security.JwtService;
 import pe.edu.upeu.AutoAndes.security.PermisosPorRol;
@@ -30,6 +31,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UsuarioDetailsService usuarioDetailsService;
+    private final UsuarioMapper usuarioMapper;
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO dto) {
@@ -68,19 +70,6 @@ public class AuthServiceImpl implements AuthService {
         Usuario usuario = usuarioRepository.findByUsernameIgnoreCase(username.trim())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + username));
 
-        List<String> permisos = PermisosPorRol.permisos(usuario.getRoles());
-        String rolPrincipal = usuario.getRoles().stream()
-                .findFirst()
-                .map(Rol::getNombre)
-                .orElse("SIN_ROL");
-
-        return UsuarioResponseDTO.builder()
-                .id(usuario.getId())
-                .username(usuario.getUsername())
-                .nombreCompleto(usuario.getNombrecompleto())
-                .rol(rolPrincipal)
-                .activo(usuario.getActivo() != null && usuario.getActivo() == 1)
-                .permisos(permisos)
-                .build();
+        return usuarioMapper.toDTO(usuario);
     }
 }

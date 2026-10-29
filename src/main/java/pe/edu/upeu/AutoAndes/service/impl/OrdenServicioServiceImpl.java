@@ -10,6 +10,7 @@ import pe.edu.upeu.AutoAndes.entity.Servicio;
 import pe.edu.upeu.AutoAndes.entity.Vehiculo;
 import pe.edu.upeu.AutoAndes.exception.RecursoNoEncontradoException;
 import pe.edu.upeu.AutoAndes.exception.ReglaNegocioException;
+import pe.edu.upeu.AutoAndes.mapper.OrdenServicioMapper;
 import pe.edu.upeu.AutoAndes.repository.OrdenServicioRepository;
 import pe.edu.upeu.AutoAndes.repository.ServicioRepository;
 import pe.edu.upeu.AutoAndes.repository.VehiculoRepository;
@@ -31,6 +32,7 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
     private final OrdenServicioRepository ordenServicioRepository;
     private final VehiculoRepository vehiculoRepository;
     private final ServicioRepository servicioRepository;
+    private final OrdenServicioMapper ordenServicioMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,7 +42,7 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
 
         return ordenServicioRepository.buscarOrdenes(placaParam, estadoParam, desde, hasta)
                 .stream()
-                .map(this::mapearADTO)
+                .map(ordenServicioMapper::toDTO)
                 .toList();
     }
 
@@ -49,7 +51,7 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
     public OrdenServicioResponseDTO obtenerPorId(Long id) {
         OrdenServicio orden = ordenServicioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Orden de servicio no encontrada con ID: " + id));
-        return mapearADTO(orden);
+        return ordenServicioMapper.toDTO(orden);
     }
 
     @Override
@@ -126,7 +128,7 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
         }
 
         OrdenServicio guardada = ordenServicioRepository.save(orden);
-        return mapearADTO(guardada);
+        return ordenServicioMapper.toDTO(guardada);
     }
 
     @Override
@@ -147,7 +149,7 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
         orden.setMotivoAnulacion(dto.getMotivo().trim());
 
         OrdenServicio actualizada = ordenServicioRepository.save(orden);
-        return mapearADTO(actualizada);
+        return ordenServicioMapper.toDTO(actualizada);
     }
 
     private synchronized String generarCorrelativo() {
@@ -164,43 +166,5 @@ public class OrdenServicioServiceImpl implements OrdenServicioService {
                     return String.format("OS-%06d", ultima.getId() + 1);
                 })
                 .orElse("OS-000001");
-    }
-
-    private OrdenServicioResponseDTO mapearADTO(OrdenServicio o) {
-        OrdenServicioResponseDTO dto = new OrdenServicioResponseDTO();
-        dto.setId(o.getId());
-        dto.setNumero(o.getNumero());
-        dto.setFecha(o.getFecha());
-        if (o.getVehiculo() != null) {
-            dto.setVehiculoId(o.getVehiculo().getId());
-            dto.setVehiculoPlaca(o.getVehiculo().getPlaca());
-            if (o.getVehiculo().getCliente() != null) {
-                dto.setClienteNombre(o.getVehiculo().getCliente().getNombres());
-            }
-        }
-        dto.setKilometraje(o.getKilometraje());
-        dto.setEstado(o.getEstado());
-        dto.setTotal(o.getTotal());
-        dto.setUsuarioRegistro(o.getUsuarioRegistro());
-        dto.setMotivoAnulacion(o.getMotivoAnulacion());
-
-        if (o.getDetalles() != null) {
-            List<DetalleOrdenResponseDTO> detallesDTO = o.getDetalles().stream().map(d -> {
-                DetalleOrdenResponseDTO detDTO = new DetalleOrdenResponseDTO();
-                detDTO.setId(d.getId());
-                if (d.getServicio() != null) {
-                    detDTO.setServicioId(d.getServicio().getId());
-                    detDTO.setServicioCodigo(d.getServicio().getCodigo());
-                    detDTO.setServicioNombre(d.getServicio().getNombre());
-                }
-                detDTO.setCantidad(d.getCantidad());
-                detDTO.setPrecioUnitario(d.getPrecioUnitario());
-                detDTO.setSubtotal(d.getSubtotal());
-                return detDTO;
-            }).toList();
-            dto.setDetalles(detallesDTO);
-        }
-
-        return dto;
     }
 }
